@@ -1,0 +1,7 @@
+crewai
+crewai-tools
+google-genai
+fastapi
+uvicorn
+python-dotenv
+ddgs
