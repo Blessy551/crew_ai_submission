@@ -190,8 +190,8 @@ def meeting_notes(transcript: str) -> str:
     )
     read = f"Read the transcript with the file read tool (file path: {path}). "
     parts = [
-        Task(description=read + "Write a 5-line summary of the meeting.",
-             expected_output="Exactly 5 lines.", agent=analyst("Summarizer"), async_execution=True),
+        Task(description=read + "Write a summary of the meeting as exactly 5 bullet lines, one sentence each.",
+             expected_output="Exactly 5 bullet lines.", agent=analyst("Summarizer"), async_execution=True),
         Task(description=read + "List every action item with owner and due date ('unspecified' if missing).",
              expected_output="Bullet list: action - owner - due date.", agent=analyst("Action Finder"), async_execution=True),
         Task(description=read + "List every decision that was made.",
@@ -199,8 +199,8 @@ def meeting_notes(transcript: str) -> str:
     ]
     final = Task(
         description=(
-            "Combine the summary, action items and decisions into markdown notes with three "
-            "headings. Save with the file writer tool: filename 'notes.md', directory 'output', "
+            "Combine the summary (keep it as exactly 5 bullet lines), action items and decisions "
+            "into markdown notes with three headings. Save with the file writer tool: filename 'notes.md', directory 'output', "
             "overwrite true. Finally reply with the full notes."
         ),
         expected_output="The full markdown notes (also saved to output/notes.md).",
@@ -395,8 +395,10 @@ class SupportFlow(Flow[TicketState]):
         reply = ask(
             f"You are a support agent. Ticket category: {s.category}. Priority: {s.priority}.\n"
             "Write a short, polite reply with concrete next steps. You cannot access any account "
-            "systems, so never claim an action was already done; say what will happen next or "
-            f"what the customer should do.\n\nTicket: {s.ticket}"
+            "systems, so never say you have escalated, forwarded, refunded or fixed anything; use "
+            "future wording instead (e.g. 'this will be passed to our billing team') or say what "
+            "the customer should do. End with the sign-off 'Customer Support Team' and no "
+            f"[bracketed placeholders].\n\nTicket: {s.ticket}"
         )
         s.result = f"Category: {s.category}\nPriority: {s.priority}\n\n{reply}"
 
@@ -424,7 +426,8 @@ class ResumeFlow(Flow[ResumeState]):
     @listen(load_resumes)
     def score_resume(self):
         r = ask(
-            "Score how well this resume fits the job from 0 to 10. Reply with only an integer.\n\n"
+            "Score how well this resume fits the job from 0 to 10. Reserve 10 for a perfect match "
+            "with no meaningful gaps; deduct a point for each gap. Reply with only an integer.\n\n"
             f"JOB:\n{self.state.job}\n\nRESUME:\n{self.state.resume}"
         )
         m = re.search(r"\d+", r)
@@ -446,7 +449,8 @@ class ResumeFlow(Flow[ResumeState]):
     @listen("reject")
     def draft_rejection(self):
         self.state.result = "REJECTED\n\n" + ask(
-            "Write a short, polite, encouraging rejection email for a candidate. "
+            "Write a short, polite, encouraging rejection email for a candidate. Sign off as "
+            "'The Hiring Team' and use no [bracketed placeholders] (no company name, no your name). "
             f"Job:\n{self.state.job}\n\nResume:\n{self.state.resume[:1500]}"
         )
 
@@ -713,7 +717,8 @@ class ApprovalFlow(Flow[ReportState]):
     def publish_report(self):
         s = self.state
         save("final.md", s.draft)
-        s.result = f"Status: {s.decision} (reviewed automatically)\n\n{s.draft}"
+        status = "approved" if s.decision == "approved" else "published after revision"
+        s.result = f"Status: {status} (reviewed automatically)\n\n{s.draft}"
 
 
 @app.post("/agent10", response_model=Out)
