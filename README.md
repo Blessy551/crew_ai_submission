@@ -3,6 +3,7 @@
 One FastAPI server that exposes 10 CrewAI projects as `POST /agent1` … `POST /agent10`. All routes share the same JSON contract.
 
 **Live URL:** https://crew-ai-submission.onrender.com (Swagger UI with a sample input per route: https://crew-ai-submission.onrender.com/docs)
+Opening the base URL in a browser (GET) returns a JSON index of all 10 routes with a sample body for each.
 (Free hosting tiers may sleep; the first request can take ~30 s to wake the server.)
 
 ## API contract

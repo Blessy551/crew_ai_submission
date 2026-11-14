@@ -35,6 +35,17 @@ def ex(text: str):
     return Body(openapi_examples={"sample": {"summary": "Sample input", "value": {"input": text}}})
 
 
+@app.get("/", include_in_schema=False)
+def index():
+    """Landing page for humans and agents: lists the POST routes with a sample body each."""
+    routes = {
+        path: {"method": "POST", "body": op["post"]["requestBody"]["content"]["application/json"]["examples"]["sample"]["value"]}
+        for path, op in app.openapi()["paths"].items() if path.startswith("/agent")
+    }
+    return {"service": "CrewAI Projects: 10 agents, POST only, body {\"input\": \"...\"}, response {\"output\": \"...\"}",
+            "docs": "/docs", "openapi": "/openapi.json", "routes": routes}
+
+
 # Free tier = ~20 requests/day PER MODEL and preview models 503 often, so retries walk this list.
 MODELS = [
     os.getenv("GEMINI_MODEL", "gemini/gemini-3.1-flash-lite-preview"),
