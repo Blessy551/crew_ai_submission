@@ -13,7 +13,7 @@ from crewai.tools import tool
 from crewai_tools import FileReadTool, FileWriterTool, ScrapeWebsiteTool
 from ddgs import DDGS
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel
 
 load_dotenv()
@@ -23,12 +23,16 @@ app = FastAPI(title="CrewAI Projects")
 
 class In(BaseModel):
     input: str
-    model_config = {"json_schema_extra": {"example": {"input": "AI in farming"}}}
 
 
 class Out(BaseModel):
     output: str
     model_config = {"json_schema_extra": {"example": {"output": "# Final answer..."}}}
+
+
+def ex(text: str):
+    """Per-route sample request body shown in /docs and /openapi.json."""
+    return Body(openapi_examples={"sample": {"summary": "Sample input", "value": {"input": text}}})
 
 
 # Free tier = ~20 requests/day PER MODEL and preview models 503 often, so retries walk this list.
@@ -108,7 +112,7 @@ def blog_post(topic: str) -> str:
 
 
 @app.post("/agent1", response_model=Out)
-def agent1(body: In):
+def agent1(body: In = ex("Benefits of urban rooftop gardens")):
     return run(blog_post, body.input)
 
 
@@ -165,7 +169,7 @@ def competitor_analysis(text: str) -> str:
 
 
 @app.post("/agent2", response_model=Out)
-def agent2(body: In):
+def agent2(body: In = ex("https://www.notion.com https://evernote.com")):
     return run(competitor_analysis, body.input)
 
 
@@ -214,7 +218,10 @@ def meeting_notes(transcript: str) -> str:
 
 
 @app.post("/agent3", response_model=Out)
-def agent3(body: In):
+def agent3(body: In = ex(
+    "Priya: Let's review the Q3 launch. Rahul: Backend is on track but QA needs two more days. "
+    "Priya: Okay, we decided to move the launch from Oct 10 to Oct 14. Rahul: I will finish the API tests by Oct 8. "
+    "Sara: I'll update the landing page copy by Friday. Priya: Also we agreed to drop the dark mode feature from v1.")):
     return run(meeting_notes, body.input)
 
 
@@ -313,7 +320,10 @@ def data_report(csv_text: str) -> str:
 
 
 @app.post("/agent4", response_model=Out)
-def agent4(body: In):
+def agent4(body: In = ex(
+    "date,region,product,units,revenue\n2026-01-05,North,Widget,10,100.0\n2026-01-06,South,Widget,5,50.0\n"
+    "2026-01-07,North,Gadget,3,90.0\n2026-01-08,East,Gadget,8,240.0\n2026-01-09,South,Gizmo,2,200.0\n"
+    "2026-01-10,East,Widget,20,200.0\n2026-01-11,North,Gizmo,1,100.0")):
     return run(data_report, body.input)
 
 
@@ -404,7 +414,7 @@ class SupportFlow(Flow[TicketState]):
 
 
 @app.post("/agent5", response_model=Out)
-def agent5(body: In):
+def agent5(body: In = ex("I was charged twice for my subscription this month, please refund one payment.")):
     return run(lambda t: run_flow(SupportFlow, ticket=t), body.input)
 
 
@@ -462,7 +472,9 @@ class ResumeFlow(Flow[ResumeState]):
 
 
 @app.post("/agent6", response_model=Out)
-def agent6(body: In):
+def agent6(body: In = ex(
+    "RESUME: Jane Doe. 5 years Python, FastAPI, AWS, led a team of 4. "
+    "JOB DESCRIPTION: Senior Python backend engineer, FastAPI, cloud experience.")):
     return run(lambda t: run_flow(ResumeFlow, resume=t), body.input)
 
 
@@ -522,7 +534,9 @@ class TriageFlow(Flow[IssueState]):
 
 
 @app.post("/agent7", response_model=Out)
-def agent7(body: In):
+def agent7(body: In = ex(
+    "App crashes with a NullPointerException every time I tap Save on the profile page "
+    "after uploading a photo larger than 5MB. Android 14.")):
     return run(lambda t: run_flow(TriageFlow, issue=t), body.input)
 
 
@@ -583,7 +597,7 @@ class RepurposeFlow(Flow[ArticleState]):
 
 
 @app.post("/agent8", response_model=Out)
-def agent8(body: In):
+def agent8(body: In = ex("https://en.wikipedia.org/wiki/Remote_work")):
     return run(lambda t: run_flow(RepurposeFlow, article=t), body.input)
 
 
@@ -646,7 +660,7 @@ class LeadFlow(Flow[LeadState]):
 
 
 @app.post("/agent9", response_model=Out)
-def agent9(body: In):
+def agent9(body: In = ex("Stripe https://stripe.com")):
     def go(t: str) -> str:
         if not re.search(r"https?://\S+", t):
             raise HTTPException(400, "input must contain the lead's website URL, e.g. 'Acme Corp https://acme.com'")
@@ -722,5 +736,5 @@ class ApprovalFlow(Flow[ReportState]):
 
 
 @app.post("/agent10", response_model=Out)
-def agent10(body: In):
+def agent10(body: In = ex("Benefits of a four-day work week")):
     return run(lambda t: run_flow(ApprovalFlow, topic=t), body.input)
