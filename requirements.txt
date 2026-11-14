@@ -1,7 +1,7 @@
-crewai
-crewai-tools
-google-genai
-fastapi
-uvicorn
-python-dotenv
-ddgs
+crewai==1.15.30
+crewai-tools==1.15.30
+google-genai==2.33.0
+fastapi==0.162.0
+uvicorn==0.54.0
+python-dotenv==1.2.4
+ddgs==9.16.1
