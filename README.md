@@ -2,7 +2,7 @@
 
 One FastAPI server that exposes 10 CrewAI projects as `POST /agent1` … `POST /agent10`. All routes share the same JSON contract.
 
-**Live URL:** `<PASTE DEPLOYED BASE URL HERE>`
+**Live URL:** https://crew-ai-submission.onrender.com (Swagger UI with a sample input per route: https://crew-ai-submission.onrender.com/docs)
 (Free hosting tiers may sleep; the first request can take ~30 s to wake the server.)
 
 ## API contract
@@ -41,7 +41,7 @@ Interactive docs (Swagger) are available at `/docs`.
 
 Notes:
 
-- `/agent10` uses an **automated reviewer** in place of the human approval step. The output starts with `Status: approved|revise (reviewed automatically)`.
+- `/agent10` uses an **automated reviewer** in place of the human approval step. The output starts with `Status: approved (reviewed automatically)` or `Status: published after revision (reviewed automatically)`.
 - Routes that write files (`output/*.md`, `output/*.csv`) also return their content in `output`, because hosted disks are ephemeral.
 
 ## Example
